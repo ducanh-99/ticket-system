@@ -41,15 +41,14 @@ def app() -> Generator[FastAPI, Any, None]:
     Create a fresh database on each test case.
     """
     BareBaseModel.metadata.create_all(engine)  # Create the tables.
-    query = ["SET FOREIGN_KEY_CHECKS = 0;"]
-    for tbl in reversed(BareBaseModel.metadata.sorted_tables):
-        query.append(f"DELETE FROM `{tbl}` where 1 = 1;")
-    query.append("SET FOREIGN_KEY_CHECKS = 1;")
-    query_str = "\n".join(query)
+    # query = ["SET FOREIGN_KEY_CHECKS = 0;"]
+    # for tbl in reversed(BareBaseModel.metadata.sorted_tables):
+    #     query.append(f"DELETE FROM `{tbl}` where 1 = 1;")
+    # query_str = "\n".join(query)
 
     session = TestingSessionLocal(bind=engine.connect())
-    session.execute(text(query_str))
-    session.commit()
+    # session.execute(text(query_str))
+    # session.commit()
     _app = get_application()
     yield _app
     # BareBaseModel.metadata.drop_all(engine)
@@ -105,13 +104,6 @@ def client(app: FastAPI, db_session: TestingSessionLocal) -> Generator[TestClien
         yield client
 
 
-@pytest.mark.usefixtures('app_class')
-class APITestCase:
-
-    def set_permanent_header(self, client: TestClient, key: str, value: str):
-        client.headers.update({str(key): str(value)})
-
-
 @pytest.fixture
 def app_class(request, app):
     if request.cls is not None:
@@ -130,3 +122,10 @@ available fixtures:
 @pytest.mark.usefixtures('each_test_case', 'each_test_suite')
 class Jira:
     pass
+
+
+@pytest.mark.usefixtures('app_class')
+class APITestCase:
+
+    def set_permanent_header(self, client: TestClient, key: str, value: str):
+        client.headers.update({str(key): str(value)})
